@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>衍之塔羅 | 聖三角啟示錄</title>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --deep-purple: #1a0b2e;
+            --space-blue: #0a192f;
+            --card-glow: rgba(212, 175, 55, 0.4);
+            --label-bg: rgba(0, 0, 0, 0.8);
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; min-height: 100vh;
+            background-color: #050508;
+            color: #eee;
+            font-family: 'Cinzel', 'Noto Serif TC', serif;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* 動態星雲背景 */
+        .nebula-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(circle at 30% 20%, var(--deep-purple) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, var(--space-blue) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, #0d0215 0%, #050508 100%);
+            z-index: -2; filter: blur(30px);
+            animation: nebulaPulse 10s infinite alternate ease-in-out;
+        }
+        @keyframes nebulaPulse { from { opacity: 0.6; transform: scale(1); } to { opacity: 0.9; transform: scale(1.1); } }
+
+        .mystic-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 100%; height: 100%; max-width: 800px; max-height: 800px;
+            background: url('https://www.transparenttextures.com/patterns/sacred-geometry.png');
+            opacity: 0.1; z-index: -1; pointer-events: none;
+        }
+
+        h1 { margin-top: 30px; font-size: 2rem; letter-spacing: 10px; color: var(--gold); text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); text-align: center; }
+
+        /* 響應式牌陣區域 */
+        .spread {
+            display: flex; gap: 20px; margin: 30px 0;
+            justify-content: center; align-items: center;
+            flex-direction: row; /* 電腦版橫向 */
+            width: 95%;
+        }
+
+        /* 手機版自動切換為縱向 */
+        @media (max-width: 768px) {
+            .spread { flex-direction: column; gap: 40px; }
+            h1 { font-size: 1.6rem; letter-spacing: 5px; }
+            .card-box { width: 140px; height: 240px; } /* 手機版稍微縮小牌尺寸 */
+        }
+
+        .card-container { display: flex; flex-direction: column; align-items: center; }
+
+        .card-box {
+            width: 160px; height: 280px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s;
+        }
+
+        .card-face {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+
+        .card-back {
+            background: linear-gradient(145deg, #1a1a1a, #000);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .card-back::after { content: "衍"; font-size: 2.5rem; color: var(--gold); opacity: 0.25; }
+
+        .card-front {
+            transform: rotateY(180deg);
+            background-size: cover; background-position: center;
+            border: 1.5px solid var(--gold);
+            display: flex; align-items: flex-end;
+        }
+
+        .card-name-label {
+            width: 100%; background: var(--label-bg); color: var(--gold);
+            text-align: center; padding: 6px 0; font-size: 0.85rem;
+            letter-spacing: 1px; backdrop-filter: blur(5px);
+        }
+
+        .flipped { transform: rotateY(180deg); box-shadow: 0 0 25px var(--card-glow); }
+        .reversed { transform: rotateY(180deg) rotateZ(180deg); box-shadow: 0 0 25px var(--card-glow); }
+        .reversed .card-name-label { transform: rotateZ(180deg); }
+
+        .time-label { margin-top: 15px; font-size: 1rem; letter-spacing: 3px; color: var(--gold); opacity: 0.7; }
+
+        .controls { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+
+        .btn-draw {
+            background: rgba(0,0,0,0.6); border: 1px solid var(--gold);
+            color: var(--gold); padding: 12px 40px; font-size: 1rem; letter-spacing: 5px;
+            cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px);
+        }
+        .btn-draw:hover:not(:disabled) { background: var(--gold); color: #000; box-shadow: 0 0 20px var(--gold); }
+
+        /* LINE 聯絡區塊 */
+        .contact-section {
+            margin: 40px 0; padding: 20px;
+            border-top: 1px solid rgba(212, 175, 55, 0.2);
+            text-align: center; width: 80%; max-width: 400px;
+        }
+        .line-link {
+            display: inline-flex; align-items: center; gap: 10px;
+            color: #06C755; /* LINE 代表色 */
+            text-decoration: none; font-size: 1.1rem; font-weight: bold;
+            border: 1px solid #06C755; padding: 10px 20px; border-radius: 50px;
+            transition: 0.3s;
+        }
+        .line-link:hover { background: #06C755; color: white; box-shadow: 0 0 15px #06C755; }
+
+        #hint { height: 20px; color: var(--gold); opacity: 0.7; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div class="nebula-canvas"></div>
+    <div class="mystic-overlay"></div>
+
+    <h1>衍之塔羅</h1>
+
+    <div class="spread">
+        <div class="card-container">
+            <div class="card-box" id="box0">
+                <div class="card-face card-back"></div>
+                <div class="card-face card-front" id="img0"><div class="card-name-label" id="name0"></div></div>
+            </div>
+            <div class="time-label">過去</div>
+        </div>
+        <div class="card-container">
+            <div class="card-box" id="box1">
+                <div class="card-face card-back"></div>
+                <div class="card-face card-front" id="img1"><div class="card-name-label" id="name1"></div></div>
+            </div>
+            <div class="time-label">現在</div>
+        </div>
+        <div class="card-container">
+            <div class="card-box" id="box2">
+                <div class="card-face card-back"></div>
+                <div class="card-face card-front" id="img2"><div class="card-name-label" id="name2"></div></div>
+            </div>
+            <div class="time-label">未來</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-draw" id="drawBtn" onclick="invokeRitual()">開 啟 啟 示</button>
+        <div id="hint"></div>
+        
+        <div class="contact-section">
+            <p style="font-size: 0.8rem; margin-bottom: 15px; color: var(--gold);">需要更深入的解析嗎？</p>
+            <a href="https://line.me/ti/p/~yz_tarot" target="_blank" class="line-link">
+                LINE 預約專人解牌: yz_tarot
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const tarotDeck = [
+            { name: "愚者", img: "https://upload.wikimedia.org/wikipedia/commons/9/90/RWS_Tarot_00_Fool.jpg" },
+            { name: "魔術師", img: "https://upload.wikimedia.org/wikipedia/commons/d/de/RWS_Tarot_01_Magician.jpg" },
+            { name: "女教皇", img: "https://upload.wikimedia.org/wikipedia/commons/8/88/RWS_Tarot_02_High_Priestess.jpg" },
+            { name: "皇后", img: "https://upload.wikimedia.org/wikipedia/commons/d/d2/RWS_Tarot_03_Empress.jpg" },
+            { name: "皇帝", img: "https://upload.wikimedia.org/wikipedia/commons/c/c3/RWS_Tarot_04_Emperor.jpg" },
+            { name: "教皇", img: "https://upload.wikimedia.org/wikipedia/commons/8/8d/RWS_Tarot_05_Hierophant.jpg" },
+            { name: "戀人", img: "https://upload.wikimedia.org/wikipedia/commons/3/3a/RWS_Tarot_06_Lovers.jpg" },
+            { name: "戰車", img: "https://upload.wikimedia.org/wikipedia/commons/9/9b/RWS_Tarot_07_Chariot.jpg" },
+            { name: "力量", img: "https://upload.wikimedia.org/wikipedia/commons/f/f5/RWS_Tarot_08_Strength.jpg" },
+            { name: "隱者", img: "https://upload.wikimedia.org/wikipedia/commons/4/4d/RWS_Tarot_09_Hermit.jpg" },
+            { name: "命運之輪", img: "https://upload.wikimedia.org/wikipedia/commons/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg" },
+            { name: "正義", img: "https://upload.wikimedia.org/wikipedia/commons/e/e0/RWS_Tarot_11_Justice.jpg" },
+            { name: "倒吊人", img: "https://upload.wikimedia.org/wikipedia/commons/2/2b/RWS_Tarot_12_Hanged_Man.jpg" },
+            { name: "死神", img: "https://upload.wikimedia.org/wikipedia/commons/d/d7/RWS_Tarot_13_Death.jpg" },
+            { name: "節制", img: "https://upload.wikimedia.org/wikipedia/commons/f/f8/RWS_Tarot_14_Temperance.jpg" },
+            { name: "惡魔", img: "https://upload.wikimedia.org/wikipedia/commons/5/55/RWS_Tarot_15_Devil.jpg" },
+            { name: "高塔", img: "https://upload.wikimedia.org/wikipedia/commons/5/53/RWS_Tarot_16_Tower.jpg" },
+            { name: "星星", img: "https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_17_Star.jpg" },
+            { name: "月亮", img: "https://upload.wikimedia.org/wikipedia/commons/7/7f/RWS_Tarot_18_Moon.jpg" },
+            { name: "太陽", img: "https://upload.wikimedia.org/wikipedia/commons/1/17/RWS_Tarot_19_Sun.jpg" },
+            { name: "審判", img: "https://upload.wikimedia.org/wikipedia/commons/d/dd/RWS_Tarot_20_Judgement.jpg" },
+            { name: "世界", img: "https://upload.wikimedia.org/wikipedia/commons/f/ff/RWS_Tarot_21_World.jpg" }
+        ];
+
+        let drawing = false;
+
+        async function invokeRitual() {
+            if (drawing) return;
+            drawing = true;
+            const btn = document.getElementById('drawBtn');
+            const hint = document.getElementById('hint');
+            btn.disabled = true;
+            hint.innerText = "正在連結宇宙頻率...";
+
+            for (let i = 0; i < 3; i++) document.getElementById(`box${i}`).classList.remove('flipped', 'reversed');
+
+            const shuffled = [...tarotDeck].sort(() => Math.random() - 0.5);
+            const selection = [shuffled[0], shuffled[1], shuffled[2]];
+
+            try {
+                await Promise.all(selection.map(c => new Promise(res => {
+                    const i = new Image(); i.src = c.img; i.onload = res;
+                })));
+
+                selection.forEach((card, idx) => {
+                    document.getElementById(`img${idx}`).style.backgroundImage = `url('${card.img}')`;
+                    document.getElementById(`name${idx}`).innerText = card.name;
+                });
+
+                hint.innerText = "能量匯聚。";
+                setTimeout(() => flipCard(0), 400);
+                setTimeout(() => flipCard(1), 1200);
+                setTimeout(() => flipCard(2), 2000);
+                setTimeout(() => { drawing = false; btn.disabled = false; }, 3500);
+            } catch (err) {
+                hint.innerText = "連結受阻，請重試。";
+                drawing = false; btn.disabled = false;
+            }
+        }
+
+        function flipCard(idx) {
+            const box = document.getElementById(`box${idx}`);
+            const isRev = Math.random() > 0.5;
+            const label = document.getElementById(`name${idx}`);
+            const baseName = label.innerText;
+            if (isRev) {
+                box.classList.add('reversed');
+                label.innerText = baseName + " (逆位)";
+            } else {
+                box.classList.add('flipped');
+                label.innerText = baseName + " (正位)";
+            }
+        }
+    </script>
+</body>
+</html>
