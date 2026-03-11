@@ -2,286 +2,462 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>衍之塔羅 | 四方啟示錄</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>雅芳點餐系統 Pro</title>
     <style>
-        :root {
-            --gold: #d4af37;
-            --deep-purple: #1a0b2e;
-            --space-blue: #0a192f;
-            --card-glow: rgba(212, 175, 55, 0.4);
-            --label-bg: rgba(0, 0, 0, 0.85);
+        :root { --primary: #27ae60; --secondary: #2ecc71; --accent: #e74c3c; --dark: #2c3e50; --bg: #f4f7f6; --white: #ffffff; }
+        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; margin: 0; padding-bottom: 90px; background: var(--bg); color: var(--dark); }
+        .header { background: var(--primary); color: white; padding: 15px 20px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        .section-title { font-size: 1.2rem; margin-bottom: 15px; border-left: 5px solid var(--primary); padding-left: 10px; }
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .menu-item { background: var(--white); padding: 15px; border-radius: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
+        .menu-item h3 { margin: 10px 0 5px; font-size: 1.1rem; }
+        .menu-item .price { color: var(--accent); font-weight: bold; margin-bottom: 10px; }
+
+        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; }
+        .tab-item { text-align: center; font-size: 16px; color: #95a5a6; cursor: pointer; flex: 1; font-weight: bold; }
+        .tab-item.active { color: var(--primary); }
+        .tab-item .icon { font-size: 24px; display: block; margin-bottom: 3px; }
+        #cart-count-badge { background: var(--accent); color: white; border-radius: 50%; padding: 3px 8px; font-size: 12px; position: absolute; top: 2px; right: 20%; }
+
+        .section { display: none; }
+        .active-section { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .btn { border: none; border-radius: 12px; padding: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1rem; transition: background 0.2s; }
+        .btn-add { background: var(--secondary); color: white; }
+        .btn-checkout { background: var(--primary); color: white; margin-top: 15px; }
+        .btn-checkout:disabled { background: #bdc3c7; cursor: not-allowed; }
+        .btn-onsite { background: #f39c12; color: white; margin-top: 10px; display: none; } 
+        .btn-admin { background: var(--dark); color: white; margin-top: 10px; }
+        
+        .card { background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; font-size: 1rem;}
+        .qty-control { display: flex; align-items: center; gap: 10px; }
+        .qty-btn { background: #eee; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+        .qty-val { font-weight: bold; min-width: 20px; text-align: center; }
+        .del-btn { color: var(--accent); cursor: pointer; margin-left: 10px; font-size: 18px; }
+
+        #pickup-time-select { width: 100%; padding: 12px; font-size: 1.1rem; border-radius: 10px; border: 1px solid #ccc; margin-top: 15px; box-sizing: border-box; text-align: center; }
+        #order-number-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; box-sizing: border-box; font-size: 1.1rem; text-align: center; text-transform: uppercase; }
+        .admin-only { display: none; border: 2px dashed var(--dark); padding: 15px; margin-top: 20px; border-radius: 15px; }
+
+        .unpaid-item { background: var(--white); border: 1px solid #ddd; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .unpaid-item-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px; font-size: 1.1rem; border-bottom: 1px dashed #eee; padding-bottom: 8px;}
+
+        #hidden-print-area { display: none; }
+        @media print { 
+            @page { margin: 0; size: auto; }
+            body * { visibility: hidden; } 
+            #hidden-print-area, #hidden-print-area * { visibility: visible; } 
+            #hidden-print-area { display: block !important; position: absolute; left: 0; top: 0; width: 100%; text-align: center; } 
+            #hidden-print-area img { width: 100%; max-width: 384px; }
         }
-
-        body, html {
-            margin: 0; padding: 0;
-            width: 100%; min-height: 100vh;
-            background-color: #050508;
-            color: #eee;
-            font-family: 'Cinzel', 'Noto Serif TC', serif;
-            display: flex; flex-direction: column; align-items: center;
-        }
-
-        /* 動態星雲背景 */
-        .nebula-canvas {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: 
-                radial-gradient(circle at 30% 20%, var(--deep-purple) 0%, transparent 50%),
-                radial-gradient(circle at 70% 80%, var(--space-blue) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, #0d0215 0%, #050508 100%);
-            z-index: -2; filter: blur(30px);
-            animation: nebulaPulse 10s infinite alternate ease-in-out;
-        }
-        @keyframes nebulaPulse { from { opacity: 0.6; transform: scale(1); } to { opacity: 0.9; transform: scale(1.1); } }
-
-        .mystic-overlay {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 100%; height: 100%; max-width: 800px; max-height: 800px;
-            background-image: url('https://www.transparenttextures.com/patterns/sacred-geometry.png');
-            opacity: 0.15; z-index: -1; pointer-events: none;
-        }
-
-        h1 { margin-top: 30px; font-size: 2.2rem; letter-spacing: 12px; color: var(--gold); text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); text-align: center; }
-
-        /* 牌陣佈局優化 */
-        .spread-grid {
-            display: flex; flex-direction: column; align-items: center; gap: 40px; margin: 40px 0; width: 95%;
-        }
-
-        .row-top { display: flex; gap: 25px; justify-content: center; flex-wrap: wrap; }
-        .row-bottom { display: flex; justify-content: center; margin-top: 10px; }
-
-        .card-container { display: flex; flex-direction: column; align-items: center; }
-
-        .card-box {
-            width: 155px; height: 270px;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s;
-        }
-
-        @media (max-width: 768px) {
-            .row-top { flex-direction: column; gap: 30px; }
-            .card-box { width: 140px; height: 245px; }
-        }
-
-        .card-face {
-            position: absolute; width: 100%; height: 100%;
-            backface-visibility: hidden;
-            border-radius: 12px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            box-shadow: 0 10px 35px rgba(0,0,0,0.9);
-            overflow: hidden;
-        }
-
-        .card-back {
-            background: linear-gradient(145deg, #1a1a1a, #000);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 2;
-        }
-        .card-back::after { content: "衍"; font-size: 2.8rem; color: var(--gold); opacity: 0.3; text-shadow: 0 0 10px var(--gold); }
-
-        .card-front {
-            transform: rotateY(180deg);
-            background-size: cover; background-position: center;
-            border: 1.5px solid var(--gold);
-            display: flex; align-items: flex-end;
-            z-index: 1; filter: contrast(1.1) brightness(0.95);
-        }
-
-        .card-name-label {
-            width: 100%; background: var(--label-bg); color: var(--gold);
-            text-align: center; padding: 8px 0; font-size: 0.85rem;
-            letter-spacing: 1px; backdrop-filter: blur(5px);
-            border-top: 1px solid rgba(212, 175, 55, 0.2);
-        }
-
-        /* 翻牌與逆位 */
-        .flipped { transform: rotateY(180deg); box-shadow: 0 0 30px var(--card-glow); }
-        .reversed { transform: rotateY(180deg) rotateZ(180deg); box-shadow: 0 0 30px var(--card-glow); }
-        .reversed .card-name-label { transform: rotateZ(180deg); }
-
-        .time-label { margin-top: 15px; font-size: 1rem; letter-spacing: 4px; color: var(--gold); opacity: 0.8; }
-        .suggest-label { color: #fff; text-shadow: 0 0 10px var(--gold); font-weight: bold; }
-
-        .controls { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-
-        .btn-draw {
-            background: rgba(0,0,0,0.6); border: 1px solid var(--gold);
-            color: var(--gold); padding: 15px 55px; font-size: 1.1rem; letter-spacing: 8px;
-            cursor: pointer; transition: 0.4s; backdrop-filter: blur(10px);
-        }
-        .btn-draw:hover:not(:disabled) { background: var(--gold); color: #000; box-shadow: 0 0 25px var(--gold); }
-        .btn-draw:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        /* LINE 聯絡區塊 */
-        .contact-section {
-            margin: 50px 0; padding: 25px;
-            border-top: 1px solid rgba(212, 175, 55, 0.2);
-            text-align: center; width: 90%; max-width: 450px;
-        }
-        .line-link {
-            display: inline-flex; align-items: center; gap: 12px;
-            color: #06C755; text-decoration: none; font-size: 1.1rem;
-            border: 1.5px solid #06C755; padding: 12px 25px; border-radius: 50px;
-            transition: 0.3s; background: rgba(6, 199, 85, 0.05);
-        }
-        .line-link:hover { background: #06C755; color: white; box-shadow: 0 0 20px #06C755; }
-
-        #hint { height: 25px; color: var(--gold); opacity: 0.8; font-size: 1rem; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
-    <div class="nebula-canvas"></div>
-    <div class="mystic-overlay"></div>
+<div class="header no-print">
+    <h1 style="margin:0; font-size:1.2rem;">雅芳鹹水雞 (線上預訂)</h1>
+</div>
 
-    <h1>衍之塔羅</h1>
-
-    <div class="spread-grid">
-        <div class="row-top">
-            <div class="card-container">
-                <div class="card-box" id="box0">
-                    <div class="card-face card-back"></div>
-                    <div class="card-face card-front" id="img0"><div class="card-name-label" id="name0"></div></div>
-                </div>
-                <div class="time-label">過去</div>
-            </div>
-            <div class="card-container">
-                <div class="card-box" id="box1">
-                    <div class="card-face card-back"></div>
-                    <div class="card-face card-front" id="img1"><div class="card-name-label" id="name1"></div></div>
-                </div>
-                <div class="time-label">現在</div>
-            </div>
-            <div class="card-container">
-                <div class="card-box" id="box2">
-                    <div class="card-face card-back"></div>
-                    <div class="card-face card-front" id="img2"><div class="card-name-label" id="name2"></div></div>
-                </div>
-                <div class="time-label">未來</div>
-            </div>
-        </div>
-
-        <div class="row-bottom">
-            <div class="card-container">
-                <div class="card-box" id="box3">
-                    <div class="card-face card-back"></div>
-                    <div class="card-face card-front" id="img3"><div class="card-name-label" id="name3"></div></div>
-                </div>
-                <div class="time-label suggest-label">◆ 衍之建議 ◆</div>
-            </div>
-        </div>
+<div class="container no-print">
+    <div id="section-menu" class="section active-section">
+        <h2 class="section-title">美味菜單</h2>
+        <div class="menu-grid" id="menu-container"></div>
     </div>
-
-    <div class="controls">
-        <button class="btn-draw" id="drawBtn" onclick="invokeRitual()">開 啟 啟 示</button>
-        <div id="hint"></div>
-        
-        <div class="contact-section">
-            <p style="font-size: 0.9rem; margin-bottom: 20px; color: var(--gold);">尋求更深層的命運指引嗎？</p>
-            <a href="https://line.me/ti/p/~yz_tarot" target="_blank" class="line-link">
-                LINE 預約專人解牌: yz_tarot
-            </a>
-        </div>
-    </div>
-
-    <script>
-        const tarotDeck = [
-            { name: "愚者", img: "https://upload.wikimedia.org/wikipedia/commons/9/90/RWS_Tarot_00_Fool.jpg" },
-            { name: "魔術師", img: "https://upload.wikimedia.org/wikipedia/commons/d/de/RWS_Tarot_01_Magician.jpg" },
-            { name: "女教皇", img: "https://upload.wikimedia.org/wikipedia/commons/8/88/RWS_Tarot_02_High_Priestess.jpg" },
-            { name: "皇后", img: "https://upload.wikimedia.org/wikipedia/commons/d/d2/RWS_Tarot_03_Empress.jpg" },
-            { name: "皇帝", img: "https://upload.wikimedia.org/wikipedia/commons/c/c3/RWS_Tarot_04_Emperor.jpg" },
-            { name: "教皇", img: "https://upload.wikimedia.org/wikipedia/commons/8/8d/RWS_Tarot_05_Hierophant.jpg" },
-            { name: "戀人", img: "https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_06_Lovers.jpg" },
-            { name: "戰車", img: "https://upload.wikimedia.org/wikipedia/commons/9/9b/RWS_Tarot_07_Chariot.jpg" },
-            { name: "力量", img: "https://upload.wikimedia.org/wikipedia/commons/f/f5/RWS_Tarot_08_Strength.jpg" },
-            { name: "隱者", img: "https://upload.wikimedia.org/wikipedia/commons/4/4d/RWS_Tarot_09_Hermit.jpg" },
-            { name: "命運之輪", img: "https://upload.wikimedia.org/wikipedia/commons/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg" },
-            { name: "正義", img: "https://upload.wikimedia.org/wikipedia/commons/e/e0/RWS_Tarot_11_Justice.jpg" },
-            { name: "倒吊人", img: "https://upload.wikimedia.org/wikipedia/commons/2/2b/RWS_Tarot_12_Hanged_Man.jpg" },
-            { name: "死神", img: "https://upload.wikimedia.org/wikipedia/commons/d/d7/RWS_Tarot_13_Death.jpg" },
-            { name: "節制", img: "https://upload.wikimedia.org/wikipedia/commons/f/f8/RWS_Tarot_14_Temperance.jpg" },
-            { name: "惡魔", img: "https://upload.wikimedia.org/wikipedia/commons/5/55/RWS_Tarot_15_Devil.jpg" },
-            { name: "高塔", img: "https://upload.wikimedia.org/wikipedia/commons/5/53/RWS_Tarot_16_Tower.jpg" },
-            { name: "星星", img: "https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_17_Star.jpg" },
-            { name: "月亮", img: "https://upload.wikimedia.org/wikipedia/commons/7/7f/RWS_Tarot_18_Moon.jpg" },
-            { name: "太陽", img: "https://upload.wikimedia.org/wikipedia/commons/1/17/RWS_Tarot_19_Sun.jpg" },
-            { name: "審判", img: "https://upload.wikimedia.org/wikipedia/commons/d/dd/RWS_Tarot_20_Judgement.jpg" },
-            { name: "世界", img: "https://upload.wikimedia.org/wikipedia/commons/f/ff/RWS_Tarot_21_World.jpg" }
-        ];
-
-        let drawing = false;
-
-        async function invokeRitual() {
-            if (drawing) return;
-            const btn = document.getElementById('drawBtn');
-            const hint = document.getElementById('hint');
+    
+    <div id="section-cart" class="section">
+        <h2 class="section-title">我的購物車</h2>
+        <div class="card">
+            <div id="cart-items"></div>
+            <div style="text-align:right; margin-top:15px;">
+                總計: $<span id="cart-total" style="font-size:1.5rem; color:var(--accent); font-weight:bold;">0</span>
+            </div>
             
-            try {
-                drawing = true;
-                btn.disabled = true;
-                hint.innerText = "正在連結宇宙頻率...";
+            <select id="pickup-time-select">
+                <option value="">🕒 請選擇預計取餐時間 (或現場等候)</option>
+                <option value="現場等候">現場等候</option>
+            </select>
 
-                for (let i = 0; i < 4; i++) {
-                    document.getElementById(`box${i}`).classList.remove('flipped', 'reversed');
+            <button class="btn btn-checkout" onclick="checkout('online')" id="checkout-btn">💳 綠界線上付款 (測試版)</button>
+            <button class="btn btn-onsite" onclick="checkout('onsite')" id="onsite-checkout-btn">👨‍🍳 後台代客下單 (現場收現)</button>
+        </div>
+    </div>
+
+    <div id="section-query" class="section">
+        <h2 class="section-title" id="query-section-title">訂單查詢</h2>
+        <div class="card">
+            <div id="user-query-area">
+                <p style="text-align:center; color:#555; font-weight:bold; margin-bottom:15px;">想知道餐點做好了沒？<br>請輸入您的取餐單號</p>
+                <input type="text" id="order-number-input" placeholder="例: #A1234">
+                <button class="btn btn-add" onclick="searchOrder()">查詢訂單進度</button>
+                <div id="order-info" style="margin-top:20px; line-height: 1.6;"></div>
+            </div>
+
+            <div id="admin-panel" class="admin-only">
+                <h3 style="margin-top:0; color:var(--primary);">👨‍🍳 廚房接單系統</h3>
+                <div id="unpaid-orders-list">
+                    <div style='text-align:center; padding: 20px; color: #888;'>訂單讀取中...</div>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <button class="btn btn-admin" onclick="shiftReport()">📊 執行交接班結單 (清除待領取)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-bar no-print">
+    <div class="tab-item active" onclick="showSection('menu', this)"><span class="icon">🍱</span>菜單</div>
+    <div class="tab-item" onclick="showSection('cart', this)" style="position:relative;"><span class="icon">🛒</span>購物車<span id="cart-count-badge">0</span></div>
+    <div class="tab-item" onclick="showSection('query', this)"><span class="icon">🔍</span>查詢</div>
+</div>
+
+<div id="hidden-print-area"></div>
+
+<script>
+    // 🌟 已更新為您最新的 GAS 網址
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwJO58oAAlIURh_exlh2oN9iPKKMqWzp5eZJqhNs-80IBmRaRYHRrmEfEcJiHwF7rHJnA/exec'; 
+    const menuData = [
+        { id: 1, name: "招牌去骨雞腿", price: 60 }, { id: 2, name: "秘製雞胸肉", price: 50 },
+        { id: 3, name: "酥脆甜不辣", price: 20 }, { id: 4, name: "Q彈豬血糕", price: 20 },
+        { id: 5, name: "滷香海帶", price: 20 }, { id: 6, name: "手工豆干", price: 20 },
+        { id: 7, name: "鮮甜高麗菜", price: 30 }, { id: 8, name: "爽脆青花菜", price: 30 },
+        { id: 9, name: "養生金針菇", price: 30 }, { id: 10, name: "爆汁貢丸", price: 25 },
+        { id: 11, name: "軟嫩百頁豆腐", price: 25 }, { id: 12, name: "脆口雞心", price: 30 }
+    ];
+
+    let cart = [];
+    let isAdmin = new URLSearchParams(window.location.search).get('admin') === 'true';
+    let currentUnpaidOrders = [];
+
+    function init() {
+        renderMenu(); 
+        generateTimeSlots();
+
+        if (isAdmin) { 
+            const pwd = prompt("請輸入管理員解鎖密碼：");
+            if (pwd === "0320") {
+                document.getElementById('admin-panel').style.display = 'block'; 
+                document.getElementById('user-query-area').style.display = 'none'; 
+                document.getElementById('onsite-checkout-btn').style.display = 'block'; 
+                document.getElementById('query-section-title').innerText = "廚房管理系統";
+                loadUnpaidOrders();
+                setInterval(loadUnpaidOrders, 5000); 
+            } else {
+                alert("密碼錯誤！");
+                isAdmin = false;
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        } else {
+            const savedOrderId = localStorage.getItem('myLastYFOrder');
+            if (savedOrderId) {
+                showSection('query', document.querySelectorAll('.tab-item')[2]);
+                document.getElementById('order-number-input').value = savedOrderId;
+                searchOrder();
+            }
+        }
+    }
+
+    function generateTimeSlots() {
+        const select = document.getElementById('pickup-time-select');
+        for (let h = 11; h <= 19; h++) {
+            select.innerHTML += `<option value="${h}:00">${h}:00</option>`;
+            if (h !== 19) select.innerHTML += `<option value="${h}:30">${h}:30</option>`;
+        }
+    }
+
+    function renderMenu() {
+        const container = document.getElementById('menu-container');
+        container.innerHTML = '';
+        menuData.forEach(item => {
+            const cartItem = cart.find(i => i.id === item.id);
+            let actionHtml = cartItem 
+                ? `<div class="qty-control" style="justify-content: center; margin-bottom: 10px;">
+                    <button class="qty-btn" onclick="updateMenuQty(${item.id}, -1)">-</button>
+                    <span class="qty-val" style="font-size: 1.2rem; margin: 0 10px;">${cartItem.qty}</span>
+                    <button class="qty-btn" onclick="updateMenuQty(${item.id}, 1)">+</button>
+                   </div>`
+                : `<button class="btn btn-add" onclick="addToCart(${item.id})">加入</button>`;
+            container.innerHTML += `<div class="menu-item"><div><h3>${item.name}</h3><p class="price">$${item.price}</p></div>${actionHtml}</div>`;
+        });
+    }
+
+    function showSection(targetId, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active-section'));
+        document.getElementById('section-' + targetId).classList.add('active-section');
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        if(el) el.classList.add('active');
+        if(targetId === 'cart') renderCart();
+        if(targetId === 'query' && isAdmin) loadUnpaidOrders();
+        if(targetId === 'menu') renderMenu(); 
+    }
+
+    function addToCart(id) {
+        const item = menuData.find(i => i.id === id);
+        cart.push({...item, qty: 1}); 
+        updateBadge(); renderMenu(); 
+    }
+
+    function updateMenuQty(id, delta) {
+        const index = cart.findIndex(i => i.id === id);
+        if (index !== -1) {
+            cart[index].qty += delta;
+            if (cart[index].qty <= 0) cart.splice(index, 1); 
+            updateBadge(); renderCart(); renderMenu(); 
+        }
+    }
+
+    function updateBadge() { document.getElementById('cart-count-badge').innerText = cart.reduce((s,i)=>s+i.qty, 0); }
+
+    function renderCart() {
+        const cont = document.getElementById('cart-items');
+        let total = 0;
+        if(cart.length === 0) {
+            cont.innerHTML = '<p style="text-align:center; padding:20px;">購物車是空的</p>';
+        } else {
+            cont.innerHTML = cart.map((i, index) => {
+                total += i.price * i.qty;
+                return `
+                <div class="cart-item">
+                    <div style="flex:1;"><div style="font-weight:bold;">${i.name}</div><div style="font-size:0.8rem; color:#888;">$${i.price}</div></div>
+                    <div class="qty-control">
+                        <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
+                        <span class="qty-val">${i.qty}</span>
+                        <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
+                        <span class="del-btn" onclick="updateQty(${index}, -999)">🗑️</span>
+                    </div>
+                    <div style="width:60px; text-align:right; font-weight:bold;">$${i.price * i.qty}</div>
+                </div>`;
+            }).join('');
+        }
+        document.getElementById('cart-total').innerText = total;
+    }
+
+    function updateQty(index, delta) {
+        cart[index].qty += delta;
+        if (cart[index].qty <= 0) cart.splice(index, 1);
+        updateBadge(); renderCart(); renderMenu(); 
+    }
+
+    function checkout(payType) {
+        if (!cart.length) return;
+        
+        const pickupTime = document.getElementById('pickup-time-select').value;
+        if (!pickupTime) {
+            alert("⚠️ 請先選擇預計取餐時間！");
+            return;
+        }
+
+        const btnOnline = document.getElementById('checkout-btn');
+        const btnOnsite = document.getElementById('onsite-checkout-btn');
+        btnOnline.disabled = true; btnOnsite.disabled = true;
+        
+        const orderId = "#A" + Math.floor(1000 + Math.random()*9000);
+        const total = document.getElementById('cart-total').innerText;
+        const itemsString = `[預約取餐：${pickupTime}]\n` + cart.map(i => `${i.name} x${i.qty}`).join('\n');
+        const currentUrl = window.location.href.split('?')[0];
+
+        fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'create', orderId: orderId, itemsString: itemsString, total: total, clientBackUrl: currentUrl, payType: payType })
+        })
+        .then(response => response.json())
+        .then(res => {
+            if (res.status === "success") {
+                if (res.payType === "onsite") {
+                    alert(`✅ 代客下單成功！單號：${orderId}\n已加入後台排單，請向客人收取現金。`);
+                    cart = []; updateBadge();
+                    showSection('query', document.querySelectorAll('.tab-item')[2]);
+                } else if (res.ecpayData) {
+                    alert(`訂單已建立！您的取餐單號為：${orderId}\n\n按下確定後將跳轉至綠界付款。`);
+                    localStorage.setItem('myLastYFOrder', orderId);
+
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = res.payUrl; 
+                    for (let key in res.ecpayData) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden'; input.name = key; input.value = res.ecpayData[key];
+                        form.appendChild(input);
+                    }
+                    document.body.appendChild(form);
+                    form.submit(); 
+                    
+                    cart = []; updateBadge();
+                }
+            } else {
+                alert("建立失敗，請稍後再試。");
+            }
+            btnOnline.disabled = false; btnOnsite.disabled = false;
+        })
+        .catch(err => {
+            alert("系統連線異常。");
+            btnOnline.disabled = false; btnOnsite.disabled = false;
+        });
+    }
+
+    function loadUnpaidOrders() {
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'get_unpaid_orders' }) })
+        .then(res => res.json()).then(data => {
+            if (data.status === 'success') {
+                currentUnpaidOrders = data.data; 
+                const list = document.getElementById('unpaid-orders-list');
+                
+                if (currentUnpaidOrders.length === 0) {
+                    list.innerHTML = "<div style='text-align:center; padding: 20px; color: #888; border: 1px dashed #ccc; border-radius: 10px;'>目前無待製作的訂單 👍</div>";
+                    return;
+                }
+                
+                list.innerHTML = currentUnpaidOrders.map(order => {
+                    let headerColor = order.status === "現場待結" ? "#f39c12" : "var(--primary)";
+                    let actionButtons = "";
+
+                    // 🌟 防呆重點：現場待結(未付款) 才有作廢按鈕；已付款則隱藏作廢按鈕！
+                    if (order.status === "現場待結") {
+                        actionButtons = `
+                            <div style="display:flex; gap:10px; margin-top:15px;">
+                                <button class="btn" style="background:#f39c12; color:white; flex:1; padding:10px;" onclick="markAsPaid('${order.orderId}')">💵 現場收取現金 $${order.total}</button>
+                                <button class="btn" style="background:#e74c3c; color:white; padding:10px;" onclick="voidOrder('${order.orderId}')">🗑️ 作廢</button>
+                            </div>
+                        `;
+                    } else if (order.status === "已付款") {
+                        actionButtons = `
+                            <div style="display:flex; gap:10px; margin-top:15px;">
+                                <button class="btn" style="background:#bdc3c7; color:white; flex:1; padding:10px;" onclick="printOrder('${order.orderId}')">🖨️ 列印單據</button>
+                            </div>
+                            <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px; font-size:1.1rem; padding:12px;" onclick="markAsDone('${order.orderId}')">✅ 製作完成，通知取餐</button>
+                        `;
+                    }
+
+                    return `
+                        <div class="unpaid-item">
+                            <div class="unpaid-item-header">
+                                <span style="color:${headerColor}">單號: ${order.orderId} (${order.status})</span>
+                            </div>
+                            <div style="font-size: 1rem; color: #444; white-space: pre-wrap; margin-top: 5px;">${order.itemsString}</div>
+                            ${actionButtons}
+                        </div>
+                    `;
+                }).join('');
+            }
+        }).catch(()=>{}); 
+    }
+
+    function markAsPaid(orderId) {
+        if(!confirm(`確定已向客人收取現金，並將單號 ${orderId} 轉為已付款排單嗎？`)) return;
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_order_status', orderId: orderId, newStatus: '已付款' }) })
+        .then(res => res.json()).then(data => {
+            if(data.status === 'success') { loadUnpaidOrders(); }
+        });
+    }
+
+    function printOrder(orderId) {
+        const order = currentUnpaidOrders.find(o => o.orderId === orderId);
+        if(order) preparePrint(order.orderId, order.time, order.itemsString, order.total);
+    }
+
+    function markAsDone(orderId) {
+        if(!confirm(`單號 ${orderId} 確定已經製作完成，要通知客人來領取嗎？`)) return;
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_order_status', orderId: orderId, newStatus: '待領取' }) })
+        .then(res => res.json()).then(data => {
+            if(data.status === 'success') { loadUnpaidOrders(); }
+        });
+    }
+
+    function voidOrder(orderId) {
+        if(!confirm(`⚠️ 確定要將尚未付款的單號 ${orderId} 作廢嗎？`)) return;
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_order_status', orderId: orderId, newStatus: '已作廢' }) })
+        .then(res => res.json()).then(data => {
+            if(data.status === 'success') { loadUnpaidOrders(); }
+        });
+    }
+
+    function preparePrint(id, time, itemsStr, total) {
+        let formattedTime = time || new Date().toISOString();
+        const dateObj = new Date(formattedTime);
+        formattedTime = dateObj.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const itemsArray = itemsStr.split('\n').filter(Boolean);
+        const height = 450 + (itemsArray.length * 40);
+        canvas.width = 384; canvas.height = height;
+        ctx.fillStyle = "white"; ctx.fillRect(0, 0, 384, height);
+        ctx.fillStyle = "black"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+        ctx.font = "bold 34px sans-serif"; ctx.fillText("雅芳鹹水雞", 192, 20);
+        ctx.font = "22px sans-serif"; ctx.fillText(id === "結單報表" ? "銷量統計" : "取餐序號", 192, 70);
+        ctx.font = "bold 70px Arial"; ctx.fillText(id.replace('#', ''), 192, 110);
+        ctx.beginPath(); ctx.lineWidth = 2; ctx.moveTo(20, 215); ctx.lineTo(364, 215); ctx.stroke();
+        ctx.font = "18px sans-serif"; ctx.fillText(formattedTime, 192, 230);
+        ctx.textAlign = "left"; ctx.font = "bold 26px sans-serif";
+        let y = 280; itemsArray.forEach(item => { ctx.fillText(item, 30, y); y += 40; });
+        ctx.textAlign = "right"; ctx.font = "bold 32px sans-serif"; ctx.fillText("總計：$" + total, 354, y + 20);
+
+        const dataURL = canvas.toDataURL('image/png');
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isMobile) { window.location.href = "rawbt:base64," + dataURL.split(',')[1]; } 
+        else {
+            const printArea = document.getElementById('hidden-print-area');
+            const img = new Image();
+            img.onload = function() { printArea.innerHTML = ""; printArea.appendChild(img); setTimeout(() => { window.print(); }, 300); };
+            img.src = dataURL;
+        }
+    }
+
+    function shiftReport() {
+        if(!confirm("確定結單？(將列印今日營業額，並清除畫面上『待領取』的訂單)")) return;
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'shift_report' }) })
+        .then(res => res.json()).then(data => {
+            if(data.status === 'success') preparePrint("結單報表", new Date().toISOString(), data.inventory, data.total);
+            else alert("無任何已結帳的訂單可以結算");
+        });
+    }
+
+    function searchOrder() {
+        let id = document.getElementById('order-number-input').value.trim();
+        const info = document.getElementById('order-info');
+        if (!id) { info.innerHTML = "<span style='color:red;'>請輸入您的單號喔！</span>"; return; }
+        if (!id.startsWith('#')) { id = '#' + id; }
+        
+        info.innerHTML = "<span style='color:var(--dark);'>努力查詢中... 🏃‍♂️</span>";
+        
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'query', orderId: id }) })
+        .then(res => res.json()).then(data => {
+            if (data.status === 'success') {
+                let statusColor = "var(--primary)";
+                let statusMsg = "✅ 已收到訂單，請稍候！";
+                
+                if (data.payStatus === "待付款" || data.payStatus === "現場待結") {
+                    statusColor = "#e74c3c";
+                    statusMsg = "⚠️ 尚未完成付款，訂單尚未排入製作。";
+                } else if (data.payStatus === "已付款") {
+                    statusColor = "#f39c12";
+                    statusMsg = "👨‍🍳 訂單已確認，正在努力製作中！";
+                } else if (data.payStatus === "待領取") {
+                    statusColor = "var(--primary)";
+                    statusMsg = "🎉 餐點已完成，請前往櫃檯領取！";
                 }
 
-                await new Promise(res => setTimeout(res, 600));
-
-                // 抽四張不重複
-                const shuffled = [...tarotDeck].sort(() => Math.random() - 0.5);
-                const selection = shuffled.slice(0, 4);
-
-                const loadImg = (c) => new Promise((res) => {
-                    const img = new Image();
-                    const timeout = setTimeout(() => res(), 4000);
-                    img.src = c.img;
-                    img.onload = () => { clearTimeout(timeout); res(); };
-                    img.onerror = () => { clearTimeout(timeout); res(); };
-                });
-
-                await Promise.all(selection.map(loadImg));
-
-                selection.forEach((card, idx) => {
-                    document.getElementById(`img${idx}`).style.backgroundImage = `url('${card.img}')`;
-                    document.getElementById(`name${idx}`).innerText = card.name;
-                });
-
-                hint.innerText = "能量匯聚完成。";
-
-                setTimeout(() => flipCard(0), 400);
-                setTimeout(() => flipCard(1), 1000);
-                setTimeout(() => flipCard(2), 1600);
-                setTimeout(() => flipCard(3), 2500); // 建議牌最後翻開，增加儀式感
-
-                setTimeout(() => {
-                    drawing = false; 
-                    btn.disabled = false;
-                }, 4000);
-
-            } catch (err) {
-                hint.innerText = "能量受阻，請再次嘗試。";
-                drawing = false; btn.disabled = false;
-            }
-        }
-
-        function flipCard(idx) {
-            const box = document.getElementById(`box${idx}`);
-            const label = document.getElementById(`name${idx}`);
-            const baseName = label.innerText;
-            const isRev = Math.random() > 0.5;
-            
-            if (isRev) {
-                box.classList.add('reversed');
-                label.innerText = baseName + " (逆位)";
+                info.innerHTML = `
+                    <div style="background: #fff; padding: 20px; border-radius: 12px; margin-top: 15px; border: 2px solid ${statusColor}; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
+                        <div style="text-align: center; color: ${statusColor}; font-size: 1.15rem; margin-bottom: 15px; font-weight:bold;">
+                            ${statusMsg}
+                        </div>
+                        <div style="background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                            <div style="font-weight: bold; margin-bottom: 8px; color: var(--dark); border-bottom: 1px solid #ccc; padding-bottom: 5px;">單號 ${id} 的點餐內容：</div>
+                            <div style="font-size: 0.95rem; color: #444; white-space: pre-wrap; line-height: 1.6;">${data.itemsString}</div>
+                        </div>
+                    </div>`;
             } else {
-                box.classList.add('flipped');
-                label.innerText = baseName + " (正位)";
+                info.innerHTML = "<span style='color:var(--accent); font-weight:bold;'>找不到此單號，請確認您輸入的是正確的取餐單號。</span>";
             }
-        }
-    </script>
+        }).catch(() => { info.innerHTML = "查詢失敗，請稍後再試。"; });
+    }
+    
+    init();
+</script>
 </body>
 </html>
-
