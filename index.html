@@ -47,7 +47,6 @@
         .unpaid-item { background: var(--white); border: 1px solid #ddd; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .unpaid-item-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px; font-size: 1.1rem; border-bottom: 1px dashed #eee; padding-bottom: 8px;}
 
-        /* 列印區域設定 */
         #hidden-print-area { display: none; }
         @media print { 
             @page { margin: 0; size: auto; }
@@ -351,7 +350,7 @@
         .then(res => res.json()).then(data => { if(data.status === 'success') { loadUnpaidOrders(); } });
     }
 
-    /* 🌟 優化後的列印功能：手機與電腦統一預覽模式 🌟 */
+    /* 🌟 修改後的列印功能：使用 Direct Intent 指令實現閃跳後自動列印並返回 🌟 */
     function preparePrint(id, time, itemsStr, total) {
         let formattedTime = time || new Date().toISOString();
         const dateObj = new Date(formattedTime);
@@ -374,15 +373,23 @@
         ctx.textAlign = "right"; ctx.font = "bold 32px sans-serif"; ctx.fillText("總計：$" + total, 354, y + 20);
 
         const dataURL = canvas.toDataURL('image/png');
-        const printArea = document.getElementById('hidden-print-area');
-        const img = new Image();
-        img.onload = function() {
-            printArea.innerHTML = ""; 
-            printArea.appendChild(img); 
-            // 統一使用瀏覽器列印服務，喚醒 RawBT PDF 預覽
-            setTimeout(() => { window.print(); }, 300); 
-        };
-        img.src = dataURL;
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+            // 使用 Direct Intent 並附加 auto_close 參數
+            // 注意：這需要配合 RawBT App 內的「Start printing automatically」與「Don't ask before opening URL」勾選
+            const rawbtUrl = "rawbt:base64," + dataURL.split(',')[1] + "?width=384&auto_close=true";
+            window.location.href = rawbtUrl;
+        } else {
+            const printArea = document.getElementById('hidden-print-area');
+            const img = new Image();
+            img.onload = function() {
+                printArea.innerHTML = ""; 
+                printArea.appendChild(img); 
+                setTimeout(() => { window.print(); }, 300); 
+            };
+            img.src = dataURL;
+        }
     }
 
     function shiftReport() {
