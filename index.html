@@ -350,7 +350,7 @@
         .then(res => res.json()).then(data => { if(data.status === 'success') { loadUnpaidOrders(); } });
     }
 
-    /* 🌟 修改後的列印功能：使用 Direct Intent 指令實現閃跳後自動列印並返回 🌟 */
+    /* 🌟 優化版：加入 cacheBuster 強制 RawBT 每次都處理新任務 🌟 */
     function preparePrint(id, time, itemsStr, total) {
         let formattedTime = time || new Date().toISOString();
         const dateObj = new Date(formattedTime);
@@ -376,9 +376,9 @@
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         
         if (isMobile) {
-            // 使用 Direct Intent 並附加 auto_close 參數
-            // 注意：這需要配合 RawBT App 內的「Start printing automatically」與「Don't ask before opening URL」勾選
-            const rawbtUrl = "rawbt:base64," + dataURL.split(',')[1] + "?width=384&auto_close=true";
+            // 加入隨機數防止緩存，並使用 auto_close
+            const cacheBuster = "&t=" + new Date().getTime();
+            const rawbtUrl = "rawbt:base64," + dataURL.split(',')[1] + "?width=384&auto_close=true" + cacheBuster;
             window.location.href = rawbtUrl;
         } else {
             const printArea = document.getElementById('hidden-print-area');
