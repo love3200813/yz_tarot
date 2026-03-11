@@ -350,7 +350,7 @@
         .then(res => res.json()).then(data => { if(data.status === 'success') { loadUnpaidOrders(); } });
     }
 
-    /* 🌟 最終修復：將參數放在 base64 關鍵字之前 🌟 */
+    /* 🌟 回歸最穩定的：系統列印預覽模式 🌟 */
     function preparePrint(id, time, itemsStr, total) {
         let formattedTime = time || new Date().toISOString();
         const dateObj = new Date(formattedTime);
@@ -373,24 +373,15 @@
         ctx.textAlign = "right"; ctx.font = "bold 32px sans-serif"; ctx.fillText("總計：$" + total, 354, y + 20);
 
         const dataURL = canvas.toDataURL('image/png');
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        
-        if (isMobile) {
-            // 🌟 修復關鍵：參數必須放在 base64 關鍵字之前 🌟
-            // 格式：rawbt:寬度;自動關閉;隨機數;base64,圖檔內容
-            const cacheBuster = "t=" + new Date().getTime();
-            const rawbtUrl = "rawbt:width=384;auto_close=true;" + cacheBuster + ";base64," + dataURL.split(',')[1];
-            window.location.href = rawbtUrl;
-        } else {
-            const printArea = document.getElementById('hidden-print-area');
-            const img = new Image();
-            img.onload = function() {
-                printArea.innerHTML = ""; 
-                printArea.appendChild(img); 
-                setTimeout(() => { window.print(); }, 300); 
-            };
-            img.src = dataURL;
-        }
+        const printArea = document.getElementById('hidden-print-area');
+        const img = new Image();
+        img.onload = function() {
+            printArea.innerHTML = ""; 
+            printArea.appendChild(img); 
+            // 透過 window.print() 喚醒系統列印，這對標籤機是最聽話的
+            setTimeout(() => { window.print(); }, 300); 
+        };
+        img.src = dataURL;
     }
 
     function shiftReport() {
