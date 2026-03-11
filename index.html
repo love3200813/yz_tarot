@@ -350,7 +350,7 @@
         .then(res => res.json()).then(data => { if(data.status === 'success') { loadUnpaidOrders(); } });
     }
 
-    /* 🌟 優化版：加入 cacheBuster 強制 RawBT 每次都處理新任務 🌟 */
+    /* 🌟 最終修復：將參數放在 base64 關鍵字之前 🌟 */
     function preparePrint(id, time, itemsStr, total) {
         let formattedTime = time || new Date().toISOString();
         const dateObj = new Date(formattedTime);
@@ -376,9 +376,10 @@
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         
         if (isMobile) {
-            // 加入隨機數防止緩存，並使用 auto_close
-            const cacheBuster = "&t=" + new Date().getTime();
-            const rawbtUrl = "rawbt:base64," + dataURL.split(',')[1] + "?width=384&auto_close=true" + cacheBuster;
+            // 🌟 修復關鍵：參數必須放在 base64 關鍵字之前 🌟
+            // 格式：rawbt:寬度;自動關閉;隨機數;base64,圖檔內容
+            const cacheBuster = "t=" + new Date().getTime();
+            const rawbtUrl = "rawbt:width=384;auto_close=true;" + cacheBuster + ";base64," + dataURL.split(',')[1];
             window.location.href = rawbtUrl;
         } else {
             const printArea = document.getElementById('hidden-print-area');
