@@ -47,6 +47,7 @@
         .unpaid-item { background: var(--white); border: 1px solid #ddd; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .unpaid-item-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px; font-size: 1.1rem; border-bottom: 1px dashed #eee; padding-bottom: 8px;}
 
+        /* 列印區域設定 */
         #hidden-print-area { display: none; }
         @media print { 
             @page { margin: 0; size: auto; }
@@ -118,7 +119,6 @@
 <div id="hidden-print-area"></div>
 
 <script>
-    // 🌟 已更新為您最新的 GAS 網址
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbwJO58oAAlIURh_exlh2oN9iPKKMqWzp5eZJqhNs-80IBmRaRYHRrmEfEcJiHwF7rHJnA/exec'; 
     const menuData = [
         { id: 1, name: "招牌去骨雞腿", price: 60 }, { id: 2, name: "秘製雞胸肉", price: 50 },
@@ -244,12 +244,8 @@
 
     function checkout(payType) {
         if (!cart.length) return;
-        
         const pickupTime = document.getElementById('pickup-time-select').value;
-        if (!pickupTime) {
-            alert("⚠️ 請先選擇預計取餐時間！");
-            return;
-        }
+        if (!pickupTime) { alert("⚠️ 請先選擇預計取餐時間！"); return; }
 
         const btnOnline = document.getElementById('checkout-btn');
         const btnOnsite = document.getElementById('onsite-checkout-btn');
@@ -274,29 +270,20 @@
                 } else if (res.ecpayData) {
                     alert(`訂單已建立！您的取餐單號為：${orderId}\n\n按下確定後將跳轉至綠界付款。`);
                     localStorage.setItem('myLastYFOrder', orderId);
-
                     const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = res.payUrl; 
+                    form.method = 'POST'; form.action = res.payUrl; 
                     for (let key in res.ecpayData) {
                         const input = document.createElement('input');
                         input.type = 'hidden'; input.name = key; input.value = res.ecpayData[key];
                         form.appendChild(input);
                     }
-                    document.body.appendChild(form);
-                    form.submit(); 
-                    
+                    document.body.appendChild(form); form.submit(); 
                     cart = []; updateBadge();
                 }
-            } else {
-                alert("建立失敗，請稍後再試。");
-            }
+            } else { alert("建立失敗，請稍後再試。"); }
             btnOnline.disabled = false; btnOnsite.disabled = false;
         })
-        .catch(err => {
-            alert("系統連線異常。");
-            btnOnline.disabled = false; btnOnsite.disabled = false;
-        });
+        .catch(err => { alert("系統連線異常。"); btnOnline.disabled = false; btnOnsite.disabled = false; });
     }
 
     function loadUnpaidOrders() {
@@ -305,17 +292,13 @@
             if (data.status === 'success') {
                 currentUnpaidOrders = data.data; 
                 const list = document.getElementById('unpaid-orders-list');
-                
                 if (currentUnpaidOrders.length === 0) {
                     list.innerHTML = "<div style='text-align:center; padding: 20px; color: #888; border: 1px dashed #ccc; border-radius: 10px;'>目前無待製作的訂單 👍</div>";
                     return;
                 }
-                
                 list.innerHTML = currentUnpaidOrders.map(order => {
                     let headerColor = order.status === "現場待結" ? "#f39c12" : "var(--primary)";
                     let actionButtons = "";
-
-                    // 🌟 防呆重點：現場待結(未付款) 才有作廢按鈕；已付款則隱藏作廢按鈕！
                     if (order.status === "現場待結") {
                         actionButtons = `
                             <div style="display:flex; gap:10px; margin-top:15px;">
@@ -331,7 +314,6 @@
                             <button class="btn" style="background:var(--primary); color:white; width:100%; margin-top:10px; font-size:1.1rem; padding:12px;" onclick="markAsDone('${order.orderId}')">✅ 製作完成，通知取餐</button>
                         `;
                     }
-
                     return `
                         <div class="unpaid-item">
                             <div class="unpaid-item-header">
@@ -349,9 +331,7 @@
     function markAsPaid(orderId) {
         if(!confirm(`確定已向客人收取現金，並將單號 ${orderId} 轉為已付款排單嗎？`)) return;
         fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_order_status', orderId: orderId, newStatus: '已付款' }) })
-        .then(res => res.json()).then(data => {
-            if(data.status === 'success') { loadUnpaidOrders(); }
-        });
+        .then(res => res.json()).then(data => { if(data.status === 'success') { loadUnpaidOrders(); } });
     }
 
     function printOrder(orderId) {
@@ -362,19 +342,16 @@
     function markAsDone(orderId) {
         if(!confirm(`單號 ${orderId} 確定已經製作完成，要通知客人來領取嗎？`)) return;
         fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_order_status', orderId: orderId, newStatus: '待領取' }) })
-        .then(res => res.json()).then(data => {
-            if(data.status === 'success') { loadUnpaidOrders(); }
-        });
+        .then(res => res.json()).then(data => { if(data.status === 'success') { loadUnpaidOrders(); } });
     }
 
     function voidOrder(orderId) {
         if(!confirm(`⚠️ 確定要將尚未付款的單號 ${orderId} 作廢嗎？`)) return;
         fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'update_order_status', orderId: orderId, newStatus: '已作廢' }) })
-        .then(res => res.json()).then(data => {
-            if(data.status === 'success') { loadUnpaidOrders(); }
-        });
+        .then(res => res.json()).then(data => { if(data.status === 'success') { loadUnpaidOrders(); } });
     }
 
+    /* 🌟 優化後的列印功能：手機與電腦統一預覽模式 🌟 */
     function preparePrint(id, time, itemsStr, total) {
         let formattedTime = time || new Date().toISOString();
         const dateObj = new Date(formattedTime);
@@ -397,14 +374,15 @@
         ctx.textAlign = "right"; ctx.font = "bold 32px sans-serif"; ctx.fillText("總計：$" + total, 354, y + 20);
 
         const dataURL = canvas.toDataURL('image/png');
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        if (isMobile) { window.location.href = "rawbt:base64," + dataURL.split(',')[1]; } 
-        else {
-            const printArea = document.getElementById('hidden-print-area');
-            const img = new Image();
-            img.onload = function() { printArea.innerHTML = ""; printArea.appendChild(img); setTimeout(() => { window.print(); }, 300); };
-            img.src = dataURL;
-        }
+        const printArea = document.getElementById('hidden-print-area');
+        const img = new Image();
+        img.onload = function() {
+            printArea.innerHTML = ""; 
+            printArea.appendChild(img); 
+            // 統一使用瀏覽器列印服務，喚醒 RawBT PDF 預覽
+            setTimeout(() => { window.print(); }, 300); 
+        };
+        img.src = dataURL;
     }
 
     function shiftReport() {
@@ -421,42 +399,30 @@
         const info = document.getElementById('order-info');
         if (!id) { info.innerHTML = "<span style='color:red;'>請輸入您的單號喔！</span>"; return; }
         if (!id.startsWith('#')) { id = '#' + id; }
-        
         info.innerHTML = "<span style='color:var(--dark);'>努力查詢中... 🏃‍♂️</span>";
-        
         fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'query', orderId: id }) })
         .then(res => res.json()).then(data => {
             if (data.status === 'success') {
                 let statusColor = "var(--primary)";
                 let statusMsg = "✅ 已收到訂單，請稍候！";
-                
                 if (data.payStatus === "待付款" || data.payStatus === "現場待結") {
-                    statusColor = "#e74c3c";
-                    statusMsg = "⚠️ 尚未完成付款，訂單尚未排入製作。";
+                    statusColor = "#e74c3c"; statusMsg = "⚠️ 尚未完成付款。";
                 } else if (data.payStatus === "已付款") {
-                    statusColor = "#f39c12";
-                    statusMsg = "👨‍🍳 訂單已確認，正在努力製作中！";
+                    statusColor = "#f39c12"; statusMsg = "👨‍🍳 正在努力製作中！";
                 } else if (data.payStatus === "待領取") {
-                    statusColor = "var(--primary)";
-                    statusMsg = "🎉 餐點已完成，請前往櫃檯領取！";
+                    statusColor = "var(--primary)"; statusMsg = "🎉 餐點已完成，請取餐！";
                 }
-
                 info.innerHTML = `
-                    <div style="background: #fff; padding: 20px; border-radius: 12px; margin-top: 15px; border: 2px solid ${statusColor}; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: left;">
-                        <div style="text-align: center; color: ${statusColor}; font-size: 1.15rem; margin-bottom: 15px; font-weight:bold;">
-                            ${statusMsg}
-                        </div>
-                        <div style="background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-                            <div style="font-weight: bold; margin-bottom: 8px; color: var(--dark); border-bottom: 1px solid #ccc; padding-bottom: 5px;">單號 ${id} 的點餐內容：</div>
-                            <div style="font-size: 0.95rem; color: #444; white-space: pre-wrap; line-height: 1.6;">${data.itemsString}</div>
+                    <div style="background: #fff; padding: 20px; border-radius: 12px; margin-top: 15px; border: 2px solid ${statusColor}; text-align: left;">
+                        <div style="text-align: center; color: ${statusColor}; font-size: 1.15rem; margin-bottom: 15px; font-weight:bold;">${statusMsg}</div>
+                        <div style="background: var(--bg); padding: 12px; border-radius: 8px;">
+                            <div style="font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #ccc;">單號 ${id} 的內容：</div>
+                            <div style="font-size: 0.95rem; white-space: pre-wrap;">${data.itemsString}</div>
                         </div>
                     </div>`;
-            } else {
-                info.innerHTML = "<span style='color:var(--accent); font-weight:bold;'>找不到此單號，請確認您輸入的是正確的取餐單號。</span>";
-            }
-        }).catch(() => { info.innerHTML = "查詢失敗，請稍後再試。"; });
+            } else { info.innerHTML = "<span style='color:var(--accent); font-weight:bold;'>找不到此單號。</span>"; }
+        }).catch(() => { info.innerHTML = "查詢失敗。"; });
     }
-    
     init();
 </script>
 </body>
